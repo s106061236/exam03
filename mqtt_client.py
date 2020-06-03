@@ -7,7 +7,7 @@ mqttc = paho.Client()
 # Settings for connection
 # TODO: revise host to your ip
 host = "localhost"
-topic = "Mbed"
+topic = "Velocity"
 
 # Callbacks
 def on_connect(self, mosq, obj, rc):
@@ -33,10 +33,10 @@ print("Connecting to " + host + "/" + topic)
 mqttc.connect(host, port=1883, keepalive=60)
 mqttc.subscribe(topic, 0)
 
-# Publish messages from Python
+# Subscribe messages from Python
 num = 0
-while num != 5:
-      ret = mqttc.publish(topic, "Message from Python!\n", qos=0)
+while num != 100:
+      ret = mqttc.subscribe(topic, qos=0)
       if (ret[0] != 0):
             print("Publish failed")
       mqttc.loop()

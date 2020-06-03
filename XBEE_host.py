@@ -5,7 +5,7 @@ import paho.mqtt.client as paho
 
 ###################################################################################################
 
-# XBee setting
+# First, set up XBee connection
 serdev = '/dev/ttyUSB0'
 s = serial.Serial(serdev, 9600)
 
@@ -49,15 +49,17 @@ char = s.read(3)
 print("Exit AT mode.")
 print(char.decode())
 
-print("start sending RPC")
-
+# after XBEE conneted, send RPC command to ask for the acc data
+print("start sending RPC\r\n")
 time.sleep(5)
-s.write("/myled1/write 1\r".encode())
+s.write("/myled1/write 0\r".encode())
 time.sleep(1)
+s.close()
 
 ###################################################################################################
 
-# collect the data
+# collect the data from K66F
+
 Fs = 100.0;  # sampling rate
 Ts = 1.0/Fs; # sampling interval
 y = np.arange(0,1,Ts) # signal vector; create Fs samples
@@ -66,13 +68,13 @@ y = np.arange(0,1,Ts) # signal vector; create Fs samples
 
 serdev = '/dev/ttyACM0'
 s = serial.Serial(serdev, 115200)
-for x in range(0, int(Fs)):
+for x in range(0, int(Fs)): # get 100 data
     line=s.readline() # Read an echo string from K66F terminated with '\n'
     # print line
     y[x] = float(line)
-
 s.close()
-
+print("collecting data finished!")
+time.sleep(1)
 ###################################################################################################
 
 #MQTT publisher
@@ -80,7 +82,7 @@ mqttc = paho.Client()
 # Settings for connection
 
 host = "localhost"
-topic= "Mbed"
+topic= "Velocity"
 port = 1883
 
 # Callbacks

@@ -47,13 +47,13 @@ void xbee_rx(void);
 void reply_messange(char *xbee_reply, char *messange);
 void check_addr(char *xbee_reply, char *messenger);
 
-float tx[3];
-int collection[1000];
-int data_index = 0;
+volatile float tx[3];
+volatile float collection[100]; // store velocity data we collect into this array
+volatile int data_index = 0;
 
 /*--------------------------------------------------------------------------------------------*/
 
-void acc_measure() {
+void acc_measure() { // This function will sample the acc data for once, and then store the data in an array
 
    pc.baud(115200);
    uint8_t who_am_i, data[2], res[6];
@@ -86,10 +86,12 @@ void acc_measure() {
          acc16 -= UINT14_MAX;
       tx[2] = ((float)acc16) / 4096.0f;
 
-      // calculate a & v
+      // calculate acceleration & velocity
       a = 9.8*sqrt(pow(tx[0],2)+pow(tx[1],2));
       velocity = a*0.1; // cm/s
-      collection[data_index] = velocity;
+      if(data_index<100){
+         collection[data_index] = velocity; // store into an array
+      }
       data_index++;
 }
 
@@ -134,11 +136,12 @@ int main(){
   xbee.getc();
 
 
-  // start
+  // start to sample
   pc.printf("start\r\n");
   t.start(callback(&queue, &EventQueue::dispatch_forever));
   t_acc.start(callback(&queue_acc, &EventQueue::dispatch_forever));
   queue_acc.call_every(100, &acc_measure); // sample every 0.1s
+
   // Setup a serial interrupt function of receiving data from xbee
   xbee.attach(xbee_rx_interrupt, Serial::RxIrq);
 }
@@ -146,18 +149,17 @@ int main(){
 /*--------------------------------------------------------------------------------------------*/
 
 void xbee_rx_interrupt(void)
-
 {
   xbee.attach(NULL, Serial::RxIrq); // detach interrupt
   queue.call(&xbee_rx);
 }
 
-void xbee_rx(void)
+void xbee_rx(void) // if RPC called, give PC all the data collected in array collection[]
 {
   int i;
-    for(i=0;i<data_index;i++)
+    for(i=0;i<100;i++)
     {
-        pc.printf("%d\r\n",collection[i]); // if call RPC, then give PC the data collected
+        pc.printf("%d\r\n",collection[i]); 
     }
     wait(0.05);
   

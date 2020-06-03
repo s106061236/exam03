@@ -4,6 +4,8 @@
 #include "fsl_gpio.h"
 #include "math.h"
 
+/*--------------------------------------------------------------------------------------------*/
+
 #define UINT14_MAX        16383
 // FXOS8700CQ I2C address
 #define FXOS8700CQ_SLAVE_ADDR0 (0x1E<<1) // with pins SA0=0, SA1=0
@@ -24,6 +26,8 @@
 #define FXOS8700Q_M_CTRL_REG1 0x5B
 #define FXOS8700Q_M_CTRL_REG2 0x5C
 #define FXOS8700Q_WHOAMI_VAL 0xC7
+
+/*--------------------------------------------------------------------------------------------*/
 
 I2C i2c( PTD9,PTD8);
 int m_addr = FXOS8700CQ_SLAVE_ADDR1;
@@ -95,7 +99,6 @@ void acc_measure() { // This function will sample the acc data for once, and the
       data_index++;
 }
 
-
 /*--------------------------------------------------------------------------------------------*/
 
 int main(){
@@ -154,12 +157,12 @@ void xbee_rx_interrupt(void)
   queue.call(&xbee_rx);
 }
 
-void xbee_rx(void) // if RPC called, give PC all the data collected in array collection[]
+void xbee_rx(void) // if RPC called, give PC all the data collected in array collection[] through XBee
 {
   int i;
     for(i=0;i<100;i++)
     {
-        pc.printf("%d\r\n",collection[i]); 
+        xbee.printf("%d\r\n",collection[i]);
     }
     wait(0.05);
   
